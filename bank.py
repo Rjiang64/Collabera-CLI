@@ -22,10 +22,10 @@ class BankAccount:
         self.__balance -= amount
         return f"New balance: ${self.__balance}"
 
-    def check_balance(self):
+    def check_balance(self): #str
         return f"Balance: ${self.__balance}"
 
-    def get_balance(self):
+    def get_balance(self):  #
         return self.__balance
 
     def set_balance(self, balance):
@@ -49,9 +49,6 @@ class SavingsAccount(BankAccount):
         self.set_balance(self.get_balance() - amount)
         return f"Savings - New balance: ${self.get_balance()}"
  
-    
- 
-
 class CheckingAccount(BankAccount):
 
     def __init__(self, owner, password, balance=0, overdraft_limit=200):
@@ -66,9 +63,6 @@ class CheckingAccount(BankAccount):
         self.set_balance(self.get_balance() - amount)
         return f"Checking - New balance: ${self.get_balance()}"
  
-   
- 
-
 class User:
     """User with both checking and savings accounts"""
  
