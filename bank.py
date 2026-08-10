@@ -25,11 +25,62 @@ class BankAccount:
     def check_balance(self):
         return f"Balance: ${self.__balance}"
 
+    def get_balance(self):
+        return self.__balance
+
+    def set_balance(self, balance):
+        self.__balance = balance
+
+
+class SavingsAccount(BankAccount):
+
+    def __init__(self, owner, password, balance=0, minimum_balance=100):
+        super().__init__(owner, password, balance)
+        self.minimum_balance = minimum_balance
+
+    # Minimum balance enforcement
+    def withdraw(self, amount):
+        if amount > self.get_balance():
+            return "Not enough funds."
+
+        if self.get_balance() - amount < self.minimum_balance:
+            return f"Cannot withdraw. Minimum balance of ${self.minimum_balance} must be maintained."
+
+        self.set_balance(self.get_balance() - amount)
+        return f"New balance: ${self.get_balance()}"
+
+class CheckingAccount(BankAccount):
+
+    def __init__(self, owner, password, balance=0, overdraft_limit=200):
+        super().__init__(owner, password, balance)
+        self.overdraft_limit = overdraft_limit
+
+    # Overdraft limit logic
+    def withdraw(self, amount):
+        if self.get_balance() - amount < -self.overdraft_limit:
+            return f"Withdrawal denied. Overdraft limit is ${self.overdraft_limit}."
+
+        self.set_balance(self.get_balance() - amount)
+        return f"New balance: ${self.get_balance()}"
+
+
+
 
 # Set up accounts
 accounts = {
-    "ray": BankAccount("ray", "0000", balance=200),
-    "ricky": BankAccount("ricky", "1234", balance=500),
+     "ray": SavingsAccount(
+        "ray",
+        "0000",
+        balance=200,
+        minimum_balance=100
+    ),
+
+    "ricky": CheckingAccount(
+        "ricky",
+        "1234",
+        balance=500,
+        overdraft_limit=200
+    ),
 }
 
 # Login
