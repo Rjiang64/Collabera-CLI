@@ -1,5 +1,3 @@
-e · MD
-
 # Banking Application
 
 ## Overview
@@ -239,4 +237,4 @@ This project teaches:
 
 ## Author
 
-Ricky Jiang, Santosh Nukala, Rayhaan Mohamed, Shehzeen Syed,
+Ricky Jiang, Santosh Nukala, Rayhaan Mohamed, Shehzeen Syed
