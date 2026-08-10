@@ -49,12 +49,7 @@ class SavingsAccount(BankAccount):
         self.set_balance(self.get_balance() - amount)
         return f"Savings - New balance: ${self.get_balance()}"
  
-    def deposit(self, amount):
-        self.set_balance(self.get_balance() + amount)
-        return f"Savings - New balance: ${self.get_balance()}"
- 
-    def check_balance(self):
-        return f"Savings - Balance: ${self.get_balance()}"
+    
  
 
 class CheckingAccount(BankAccount):
@@ -71,12 +66,7 @@ class CheckingAccount(BankAccount):
         self.set_balance(self.get_balance() - amount)
         return f"Checking - New balance: ${self.get_balance()}"
  
-    def deposit(self, amount):
-        self.set_balance(self.get_balance() + amount)
-        return f"Checking - New balance: ${self.get_balance()}"
- 
-    def check_balance(self):
-        return f"Checking - Balance: ${self.get_balance()}"
+   
  
 
 class User:
@@ -97,6 +87,7 @@ class User:
 users = {
     "ray": User("ray", "0000", checking_balance=500, savings_balance=500),
     "ricky": User("ricky", "1234", checking_balance=500, savings_balance=500),
+    "santosh": User("Santosh", "4321", checking_balance=500, savings_balance=500),
 }
  
 
