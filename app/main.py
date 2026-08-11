@@ -1,0 +1,19 @@
+"""
+Entry Point
+Creates the FastAPI app and registers each layer's routes.
+Run with: uvicorn app.main:app --reload
+"""
+
+from fastapi import FastAPI
+from app.controllers import customer_controller, account_controller, branch_controller
+
+app = FastAPI(title="Bank Management System API", version="1.0.0")
+
+app.include_router(customer_controller.router)
+app.include_router(account_controller.router)
+app.include_router(branch_controller.router)
+
+
+@app.get("/")
+def root():
+    return {"message": "Bank Management System API is running"}
