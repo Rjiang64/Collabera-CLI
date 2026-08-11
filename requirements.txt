@@ -2,3 +2,6 @@ fastapi
 uvicorn[standard]
 pydantic[email]
 httpx
+psycopg2-binary        # the PostgreSQL driver
+sqlalchemy             # the ORM (define tables as Python classes)
+python-dotenv          # to load your DATABASE_URL from a .env file
