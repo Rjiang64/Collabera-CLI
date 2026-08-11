@@ -6,10 +6,12 @@ Run with: uvicorn app.main:app --reload
 
 from fastapi import FastAPI
 from app.controllers import customer_controller, account_controller, branch_controller
+#need for for endpoints 
 
-app = FastAPI(title="Bank Management System API", version="1.0.0")
+app = FastAPI(title="Bank Management System API", version="1.0.0") #creates application object and sets title and version development
 
-app.include_router(customer_controller.router)
+#connects each controller to the application so that the endpoints are available
+app.include_router(customer_controller.router)  
 app.include_router(account_controller.router)
 app.include_router(branch_controller.router)
 
