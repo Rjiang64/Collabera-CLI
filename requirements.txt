@@ -1,5 +1,9 @@
 fastapi
 uvicorn[standard]
 pydantic[email]
-psycopg[binary,pool]
+httpx
+psycopg[binary]
 python-dotenv
+pyjwt
+bcrypt
+python-multipart
