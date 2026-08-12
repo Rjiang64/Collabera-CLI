@@ -66,3 +66,33 @@ class AccountService:
 
     def get_all_transactions(self):
         return query_all("SELECT * FROM transactions ORDER BY id")
+
+
+    def deposit(self, account_id, amount):
+        # reject non-positive amounts or a missing account
+        if amount <= 0 or self.get_account(account_id) is None:
+            return None
+        # add the money to the account balance
+        execute("UPDATE accounts SET balance = balance + %s WHERE id = %s", (amount, account_id))
+        # record it as a DEPOSIT transaction (money comes IN -> to_account_id set, from is NULL)
+        return execute(
+            """INSERT INTO transactions (from_account_id, to_account_id, amount, type, status, description, timestamp)
+               VALUES (NULL, %s, %s, 'DEPOSIT', 'SUCCESS', 'Teller deposit', now())
+               RETURNING * ;""",
+            (account_id, amount),
+        )
+
+    def withdraw(self, account_id, amount):
+        acct = self.get_account(account_id)
+        # reject non-positive amounts, a missing account, or insufficient funds
+        if amount <= 0 or acct is None or acct["balance"] < amount:
+            return None
+        # subtract the money from the account balance
+        execute("UPDATE accounts SET balance = balance - %s WHERE id = %s", (amount, account_id))
+        # record it as a WITHDRAWAL transaction (money goes OUT -> from_account_id set, to is NULL)
+        return execute(
+            """INSERT INTO transactions (from_account_id, to_account_id, amount, type, status, description, timestamp)
+               VALUES (%s, NULL, %s, 'WITHDRAWAL', 'SUCCESS', 'Teller withdrawal', now())
+               RETURNING *;""",
+            (account_id, amount),
+        )

@@ -1,6 +1,7 @@
 # app/models/account.py
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional   
 
 class AccountResponse(BaseModel):
     id: int
@@ -14,10 +15,10 @@ class AccountResponse(BaseModel):
 
 class TransactionResponse(BaseModel):
     id: int
-    from_account_id: int
-    to_account_id: int
+    from_account_id: Optional[int] = None   # None for deposits
+    to_account_id: Optional[int] = None      # None for withdrawals
     amount: float
     type: str
-    timestamp: datetime
     status: str
-    description: str
+    description: Optional[str] = None
+    timestamp: datetime
