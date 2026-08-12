@@ -20,5 +20,10 @@ def list_branches():
 def get_branch(branch_id: int):
     branch = query_one("SELECT * FROM branches WHERE id = %s", (branch_id,))
     if branch is None:
+        # 404, missing branch is an expected case, not an error
         raise HTTPException(status_code=404, detail=f"Branch {branch_id} not found")
     return branch
+
+# NOTE: no auth/role dependency on this router — these routes are open to
+# any authenticated (or unauthenticated?) caller. Worth confirming that's
+# intentional before treating this as a role-restricted route in testing.
