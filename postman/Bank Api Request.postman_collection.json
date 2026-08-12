@@ -151,7 +151,7 @@
       "response": []
     },
     {
-      "name": "5. Analytics - No Token (401)",
+      "name": "5. Analytics - Bad Token (401 Unauthorized)",
       "event": [
         {
           "listen": "test",
