@@ -40,6 +40,8 @@ def get_customer(customer_id: int):
 
 @router.put("/{customer_id}", response_model=CustomerResponse)
 def update_customer(customer_id: int, payload: CustomerUpdate):
+    # exclude_unset -> only fields the client actually sent get updated;
+    # untouched fields are left alone rather than overwritten with defaults
     updates = payload.model_dump(exclude_unset=True)
     customer = service.update_customer(customer_id, updates)
     if customer is None:
@@ -49,7 +51,13 @@ def update_customer(customer_id: int, payload: CustomerUpdate):
 
 @router.delete("/{customer_id}")
 def deactivate_customer(customer_id: int):
+    # this is a soft delete (sets is_active = False)
+    # DELETE from the table — keeps customer history/records intact
     customer = service.deactivate_customer(customer_id)
     if customer is None:
         raise HTTPException(status_code=404, detail=f"Customer {customer_id} not found")
     return {"message": f"Customer {customer_id} deactivated", "customer": customer}
+
+# NOTE: no role/auth dependency declared on this router — anyone with a
+# valid session can create/update/deactivate customers. If Manager-only
+# access is expected for write routes, that check isn't enforced here yet.
