@@ -14,7 +14,9 @@ import { GOLD, NAVY, NAVY_DARK, CREAM } from "../theme";
 import { money, greeting, firstName } from "../format";
 
 export default function Dashboard() {
-  const { user, isManager } = useAuth();
+  // isStaff (teller/manager/admin) all see every account, so the hero total is
+  // "all accounts" for any of them -- not just managers.
+  const { user, isStaff } = useAuth();
   const navigate = useNavigate();
 
   const [accounts, setAccounts] = useState([]);
@@ -138,7 +140,7 @@ export default function Dashboard() {
       >
         <CardContent sx={{ p: { xs: 3, md: 4 } }}>
           <Typography sx={{ opacity: 0.85, fontWeight: 600 }}>
-            {isManager ? "Total Balance (all accounts)" : "Total Balance"}
+            {isStaff ? "Total Balance (all accounts)" : "Total Balance"}
           </Typography>
 
           <Typography sx={{ fontSize: { xs: 40, md: 54 }, fontWeight: 800, lineHeight: 1.15 }}>

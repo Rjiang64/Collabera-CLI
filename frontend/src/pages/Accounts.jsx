@@ -15,12 +15,19 @@ import { GOLD, NAVY, NAVY_DARK } from "../theme";
 import { money } from "../format";
 
 export default function Accounts() {
-  const { isManager } = useAuth();
+  // isStaff covers TELLER, BRANCH_MANAGER and ADMIN -- all three see every
+  // account, so every "am I looking at my own money or everyone's?" decision
+  // on this page keys off isStaff rather than isManager.
+  const { isStaff } = useAuth();
 
   const [accounts, setAccounts] = useState([]);
   const [txns, setTxns] = useState([]);
   const [form, setForm] = useState({ from_account_id: "", to_account_id: "", amount: "" });
+  // Separate state for the teller counter form so typing an amount for a
+  // deposit can't overwrite a transfer the user was part-way through filling in.
+  const [teller, setTeller] = useState({ account_id: "", amount: "" });
   const [msg, setMsg] = useState(null); // {type, text} for the alert
+  const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Load accounts + transactions. The interceptor attaches the JWT; the backend
@@ -62,26 +69,73 @@ export default function Accounts() {
     }
   }
 
-  const heading = isManager ? "All Accounts" : "My Accounts";
+  // TELLER-ONLY COUNTER OPERATIONS.
+  // The backend gates both routes with require_roles("TELLER","BRANCH_MANAGER",
+  // "ADMIN"), so a customer calling them gets a 403 regardless of what the UI
+  // shows. Hiding the panel is a convenience, NOT the security boundary.
+  //
+  // NOTE: like the transfer route, these endpoints read 'amount' as a QUERY
+  // PARAM rather than a JSON body -- hence params + a null body.
+  async function handleCounterOp(kind) {
+    setMsg(null);
+    const id = Number(teller.account_id);
+    const amount = Number(teller.amount);
+
+    if (!id || !amount || amount <= 0) {
+      setMsg({ type: "error", text: "Enter an account ID and an amount greater than zero." });
+      return;
+    }
+
+    setBusy(true);
+    try {
+      await api.post(`/api/v1/accounts/${id}/${kind}`, null, { params: { amount } });
+      setMsg({
+        type: "success",
+        text: `${kind === "deposit" ? "Deposited" : "Withdrew"} ${money(amount)} ${
+          kind === "deposit" ? "into" : "from"
+        } account #${id}.`,
+      });
+      setTeller({ account_id: "", amount: "" });
+      load(); // refresh balances + history so the change is visible immediately
+    } catch (err) {
+      // The backend returns a specific 400 for "check account id and amount"
+      // and for insufficient funds -- surface it rather than a generic message.
+      const detail = err.response?.data?.detail;
+      setMsg({
+        type: "error",
+        text: typeof detail === "string" ? detail : `${kind} failed.`,
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const heading = isStaff ? "All Accounts" : "My Accounts";
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5, flexWrap: "wrap" }}>
         <Typography variant="h4" sx={{ color: NAVY }}>{heading}</Typography>
-        {/* Make it explicit that a manager is looking at everyone's accounts */}
-        {isManager && (
+        {/* Make it explicit that staff are looking at everyone's accounts */}
+        {isStaff && (
           <Chip
-            label="Manager view"
+            label="Staff view"
             size="small"
             sx={{ fontWeight: 700, color: NAVY_DARK, backgroundColor: GOLD }}
           />
         )}
       </Box>
       <Typography color="text.secondary" sx={{ mb: 3 }}>
-        {isManager
+        {isStaff
           ? "Every account across all branches."
           : "Your balances, transfers, and history."}
       </Typography>
+
+      {/* One page-level alert shared by the teller counter and the transfer
+          form. It lives here rather than inside either card so a teller's
+          deposit confirmation doesn't appear under the "Transfer Money"
+          heading, which would read as the wrong action having succeeded. */}
+      {msg && <Alert severity={msg.type} sx={{ mb: 2 }}>{msg.text}</Alert>}
 
       {loading && <CircularProgress />}
 
@@ -101,8 +155,8 @@ export default function Accounts() {
                   Branch #{acc.branch_id}
                   {!acc.is_active && " · inactive"}
                 </Typography>
-                {/* Managers are looking at other people's accounts, so show whose */}
-                {isManager && (
+                {/* Staff are looking at other people's accounts, so show whose */}
+                {isStaff && (
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                     Customer #{acc.customer_id}
                   </Typography>
@@ -113,11 +167,60 @@ export default function Accounts() {
         ))}
       </Grid>
 
+      {/* ---- Teller counter operations: deposit / withdraw on ANY account ----
+           Only rendered for staff. The real enforcement is server-side; this
+           just keeps the controls out of a customer's way. */}
+      {isStaff && (
+        <Card sx={{ mt: 4, borderTop: `4px solid ${GOLD}` }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+              <Typography variant="h5" sx={{ color: NAVY }}>Teller Counter</Typography>
+              <Chip
+                label="Staff only"
+                size="small"
+                sx={{ fontWeight: 700, color: NAVY_DARK, backgroundColor: GOLD }}
+              />
+            </Box>
+            <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+              Take a deposit or pay out a withdrawal on a customer's account.
+            </Typography>
+
+            <Box
+              component="form"
+              onSubmit={(e) => e.preventDefault()}
+              sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2, alignItems: "center" }}
+            >
+              <TextField
+                size="small" label="Account ID" value={teller.account_id} inputMode="numeric"
+                onChange={(e) =>
+                  setTeller({ ...teller, account_id: e.target.value.replace(/\D/g, "") })
+                }
+              />
+              <TextField
+                size="small" label="Amount" value={teller.amount} inputMode="decimal"
+                onChange={(e) => setTeller({ ...teller, amount: e.target.value })}
+              />
+              <Button
+                variant="contained" disabled={busy}
+                onClick={() => handleCounterOp("deposit")}
+              >
+                {busy ? "Working..." : "Deposit"}
+              </Button>
+              <Button
+                variant="outlined" disabled={busy}
+                onClick={() => handleCounterOp("withdraw")}
+              >
+                Withdraw
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Transfer form */}
-      <Card sx={{ mt: 4 }}>
+      <Card sx={{ mt: 3 }}>
         <CardContent sx={{ p: 3 }}>
           <Typography variant="h5" sx={{ color: NAVY }}>Transfer Money</Typography>
-          {msg && <Alert severity={msg.type} sx={{ my: 2 }}>{msg.text}</Alert>}
           <Box component="form" onSubmit={handleTransfer}
                sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2, alignItems: "center" }}>
             <TextField size="small" label="From account ID" value={form.from_account_id}

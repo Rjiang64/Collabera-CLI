@@ -9,7 +9,7 @@ import { GOLD, NAVY, NAVY_DARK } from "../theme";
 import logo from "../assets/logo.png";
 
 export default function NavBar() {
-  const { user, logout, isManager } = useAuth();
+  const { user, logout, isStaff, isManager } = useAuth();
   const { pathname } = useLocation(); // so we can highlight the current page
 
   // Shared look for a nav link; the active page gets a gold underline.
@@ -49,8 +49,11 @@ export default function NavBar() {
         {/* component={Link} makes an MUI button navigate like a router link */}
         <Button component={Link} to="/" sx={linkSx("/")}>Dashboard</Button>
         <Button component={Link} to="/accounts" sx={linkSx("/accounts")}>
-          {/* Managers/admins see every customer's account, not just their own */}
-          {isManager ? "All Accounts" : "My Accounts"}
+          {/* ALL staff (teller, manager, admin) see every customer's account,
+              not just their own -- so the label has to follow isStaff, not
+              isManager, or a teller would see "My Accounts" above a list that
+              is plainly not theirs. */}
+          {isStaff ? "All Accounts" : "My Accounts"}
         </Button>
 
         {/* ROLE-BASED RENDERING: only managers/admins see Analytics */}
