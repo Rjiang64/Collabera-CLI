@@ -1,7 +1,30 @@
+"""
+LEGACY / UNUSED -- kept for reference only.
+
+WHAT THIS WAS: before the app was moved onto PostgreSQL (Neon), these
+dictionaries WERE the database. The services read and wrote them in memory,
+which is why they are keyed by id -- that made lookups instant, the same way a
+primary key does in a real table.
+
+WHY IT IS STILL HERE BUT NOT IMPORTED ANYWHERE:
+every service now reads through app/data/database.py instead, so nothing in the
+running app touches this file. It is left in the repo as a record of the
+pre-database design.
+
+WARNING -- DO NOT TRUST THESE VALUES:
+they are a frozen snapshot and have already drifted from the real database. For
+example branch 1 is called "Main Branch" here, while the actual branches table
+says "Branch 1". Anyone reading this file to find out what is in the system will
+be misled; query the database instead.
+
+If you want this gone, deleting the file is safe -- a project-wide search shows
+no module imports it.
+"""
 
 from datetime import datetime, timedelta
 
-#uses time delta to simulate account creation dates in the past
+# timedelta backdates the created_at/timestamp fields so the seed data looks
+# like it accumulated over the past year rather than all being created at once.
 #sample data for branches
 BRANCHES = {
     1: {
