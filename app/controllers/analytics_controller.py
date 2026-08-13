@@ -8,6 +8,10 @@ from fastapi import APIRouter, Depends
 from app.security.dependencies import require_roles
 # We reuse the account service to read account data for the summary.
 from app.services.account_service import AccountService
+# Branches are reference data, so we read them straight from the DB (same
+# pattern branch_controller uses) to label each summary row with a real
+# branch name + location instead of a bare id.
+from app.data.database import query_all
 
 # Group these routes under the /api/v1/analytics path.
 #
@@ -39,9 +43,17 @@ service = AccountService()
             dependencies=[Depends(require_roles("BRANCH_MANAGER", "ADMIN"))])
 
 def branch_summary():
-    """Per-branch account count and total balance. Managers/admins only."""
+    """Per-branch location, account count, and total balance. Managers/admins only."""
     # Pull every account from the database.
     accounts = service.get_all_accounts()
+
+    # Pull the branch reference rows ONCE and key them by id, so the loop below
+    # can look up "what is branch 3 called and where is it?" instantly instead of
+    # re-querying the database for every single account.
+    branches = {
+        b["id"]: b
+        for b in query_all("SELECT id, name, location FROM branches")
+    }
 
     # Build a dictionary keyed by branch_id, aggregating stats per branch.
     #
@@ -78,7 +90,18 @@ def branch_summary():
         # branch keeps adding to the SAME running total. That's what lets the
         # counts and balances accumulate branch-by-branch in a single pass,
         # without a separate "have I seen this branch?" check.
-        row = summary.setdefault(b, {"branch_id": b, "account_count": 0, "total_balance": 0.0})
+        # Look up this branch's reference row. .get(b, {}) so a stray account
+        # pointing at a deleted branch still aggregates instead of crashing --
+        # it just shows up with no name/location rather than blowing up the page.
+        info = branches.get(b, {})
+
+        row = summary.setdefault(b, {
+            "branch_id": b,
+            "branch_name": info.get("name"),
+            "location": info.get("location"),
+            "account_count": 0,
+            "total_balance": 0.0,
+        })
         row["account_count"] += 1 # one more account in this branch
         row["total_balance"] += float(a["balance"])  # add its balance to the branch total
          # float(...) converts the DB's Decimal balance into a plain number for JSON.

@@ -3,14 +3,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
+import { ThemeProvider, CssBaseline } from "@mui/material";
 import { AuthProvider } from "./context/AuthContext";
+import theme from "./theme";
 import App from "./App";
-
-// A Material-UI theme -- sets the app's primary color and design tokens.
-const theme = createTheme({
-  palette: { mode: "light", primary: { main: "#1f4e79" } },
-});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

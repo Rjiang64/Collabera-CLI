@@ -11,7 +11,7 @@ from app.controllers import analytics_controller
 from fastapi.middleware.cors import CORSMiddleware
 #need for for endpoints 
 
-app = FastAPI(title="Bank Management System API", version="1.0.0") #creates application object and sets title and version development
+app = FastAPI(title="SRTRS Bank API", version="1.0.0") #creates application object and sets title and version development
 
 #connects each controller to the application so that the endpoints are available
 app.include_router(customer_controller.router)  
@@ -23,7 +23,7 @@ app.include_router(analytics_controller.router)
 
 @app.get("/")
 def root():
-    return {"message": "Bank Management System API is running"}
+    return {"message": "SRTRS Bank API is running"}
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
