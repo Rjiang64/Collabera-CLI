@@ -6,36 +6,36 @@ exposes tiny helpers so the services can run SQL and get back dicts -
 the same shape they used to get from the in-memory sample data.
 """
 
-import os #standard library 
+import os
 
-from dotenv import load_dotenv #reads env varibales 
-from psycopg.rows import dict_row #makes query come back as dicts instead of tuples
-from psycopg_pool import ConnectionPool #manage a resuable pool of database connections
+from dotenv import load_dotenv
+from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 # Load variables from the .env file into the environment.
-load_dotenv()
+from pathlib import Path
 
-#gets database url from the environment variable DATABASE_URL, if not found, raise an error
+env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError(
-        "DATABASE_URL is not env"
+        "DATABASE_URL is not set. Copy .env.example to .env and paste your "
+        "Neon connection string."
     )
 
 # One shared pool for the whole app. Each query borrows a connection and
 # returns it. row_factory=dict_row makes every row come back as a dict.
-# prevents each request from opening a new connection, which is slow and can exhaust the database.
 pool = ConnectionPool(
-    conninfo=DATABASE_URL, #connection url 
-    min_size=1, 
+    conninfo=DATABASE_URL,
+    min_size=1,
     max_size=5,
     kwargs={"row_factory": dict_row},
     open=True,
 )
 
-#helper functions that the services call 
-#returns all matching rows as list 
-#borrow connection, open cursor (object that runs code), run the sql 
+
 def query_all(sql: str, params=None) -> list[dict]:
     """Run a SELECT and return all rows as a list of dicts."""
     with pool.connection() as conn:
@@ -43,7 +43,7 @@ def query_all(sql: str, params=None) -> list[dict]:
             cur.execute(sql, params or ())
             return cur.fetchall()
 
-#return first matching row 
+
 def query_one(sql: str, params=None) -> dict | None:
     """Run a SELECT and return the first row as a dict (or None)."""
     with pool.connection() as conn:
@@ -51,10 +51,11 @@ def query_one(sql: str, params=None) -> dict | None:
             cur.execute(sql, params or ())
             return cur.fetchone()
 
-#handle insert, update, delete
+
 def execute(sql: str, params=None) -> dict | None:
     """
-    Run an INSERT/UPDATE/DELETE and return the first row as a dict (or None).
+    Run an INSERT/UPDATE/DELETE. If the statement has a RETURNING clause,
+    the affected row is returned as a dict. The change is committed.
     """
     with pool.connection() as conn:
         with conn.cursor() as cur:

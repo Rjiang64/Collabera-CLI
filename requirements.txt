@@ -2,7 +2,7 @@ fastapi
 uvicorn[standard]
 pydantic[email]
 httpx
-psycopg[binary]
+psycopg[binary,pool]
 python-dotenv
 pyjwt
 bcrypt
