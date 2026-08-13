@@ -60,6 +60,20 @@ export default function NavBar() {
           </Button>
         )}
 
+        <Button component={Link} to="/security" sx={linkSx("/security")}>
+          Security
+          {/* A gold dot flags that two-factor is already protecting this account */}
+          {user?.mfa_enabled && (
+            <Box
+              component="span"
+              sx={{
+                ml: 0.75, width: 8, height: 8, borderRadius: "50%",
+                backgroundColor: GOLD, display: "inline-block",
+              }}
+            />
+          )}
+        </Button>
+
         <Box sx={{ ml: 3, display: "flex", alignItems: "center", gap: 1.5 }}>
           <Box sx={{ textAlign: "right", display: { xs: "none", md: "block" } }}>
             <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>

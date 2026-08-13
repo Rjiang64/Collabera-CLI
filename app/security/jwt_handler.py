@@ -33,6 +33,10 @@ SECRET = os.getenv("JWT_SECRET", "dev-secret-change-me") # the secret signing ke
 ALGORITHM = "HS256"                                      # HMAC-SHA256 signing algorithm
 ACCESS_TOKEN_MINUTES = int(os.getenv("ACCESS_TOKEN_MINUTES", "30")) # access token lifetime
 REFRESH_TOKEN_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS", "7"))
+# How long the user has to type their 6-digit code after the password step.
+# Short on purpose: this token proves "password was correct" and nothing else,
+# so it should not sit around being stealable.
+MFA_TOKEN_MINUTES = int(os.getenv("MFA_TOKEN_MINUTES", "5"))
 
 
 
@@ -68,6 +72,26 @@ def create_refresh_token(user_id: int) -> str:
         "exp": _now() + timedelta(days=REFRESH_TOKEN_DAYS), # longer expiry than the access token
     }
     return jwt.encode(payload, SECRET, algorithm=ALGORITHM)
+
+def create_mfa_token(user_id: int) -> str:
+    """
+    Build the short-lived token handed out AFTER a correct password but BEFORE
+    the 6-digit code. It is the server's way of remembering "this person passed
+    step one" without keeping session state.
+
+    SECURITY: type is "mfa_pending", NOT "access". get_current_user() only
+    accepts type == "access", so this token cannot open a single protected
+    route -- its one and only use is POST /auth/mfa/verify. That distinction is
+    what stops the password alone from being enough to get into the app.
+    """
+    payload = {
+        "sub": str(user_id),   # who is half-way through logging in
+        "type": "mfa_pending", # deliberately not "access"
+        "iat": _now(),
+        "exp": _now() + timedelta(minutes=MFA_TOKEN_MINUTES),
+    }
+    return jwt.encode(payload, SECRET, algorithm=ALGORITHM)
+
 
 def decode_token(token: str) -> dict:
      """

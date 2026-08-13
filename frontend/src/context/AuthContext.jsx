@@ -30,7 +30,24 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // LOGIN: call the backend, store the token, then load the user profile.
+  // Shared tail of a successful login: save the token so the interceptor can
+  // attach it, then load who we are.
+  async function completeLogin(accessToken) {
+    localStorage.setItem("jwt_token", accessToken);
+    const me = await api.get("/api/v1/auth/me");
+    setUser(me.data);
+    return me.data;
+  }
+
+  // LOGIN (step 1): check the password.
+  //
+  // Returns either:
+  //   { mfaRequired: true, mfaToken }  -> caller must collect a 6-digit code
+  //                                       and call verifyMfa() with it
+  //   { mfaRequired: false, user }     -> logged in, nothing more to do
+  //
+  // IMPORTANT: when MFA is required we deliberately do NOT store a token or set
+  // the user. Until the second factor passes, this person is not logged in.
   async function login(email, password) {
     // IMPORTANT: backend /login uses OAuth2 form format -> send
     // x-www-form-urlencoded with 'username' + 'password' (NOT a JSON body).
@@ -42,13 +59,21 @@ export function AuthProvider({ children }) {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
 
-    // Save the JWT so the interceptor attaches it and the session survives refresh.
-    localStorage.setItem("jwt_token", res.data.access_token);
+    if (res.data.mfa_required) {
+      return { mfaRequired: true, mfaToken: res.data.mfa_token };
+    }
 
-    // Fetch who we are (id, roles, customer_id) and store it.
-    const me = await api.get("/api/v1/auth/me");
-    setUser(me.data);
-    return me.data;
+    const me = await completeLogin(res.data.access_token);
+    return { mfaRequired: false, user: me };
+  }
+
+  // LOGIN (step 2): trade the short-lived mfa_token + the code for real tokens.
+  async function verifyMfa(mfaToken, code) {
+    const res = await api.post("/api/v1/auth/mfa/verify", {
+      mfa_token: mfaToken,
+      code,
+    });
+    return completeLogin(res.data.access_token);
   }
 
   // LOGOUT: forget the token and clear the user.
@@ -57,13 +82,23 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  // Re-read /me after something changes server-side (e.g. MFA was just turned
+  // on), so the UI reflects it without a full page reload.
+  async function refreshUser() {
+    const me = await api.get("/api/v1/auth/me");
+    setUser(me.data);
+    return me.data;
+  }
+
   // Derived role helpers so views can render conditionally.
   const roles = user?.roles || [];
   const isStaff = roles.some((r) => ["TELLER", "BRANCH_MANAGER", "ADMIN"].includes(r));
   const isManager = roles.some((r) => ["BRANCH_MANAGER", "ADMIN"].includes(r));
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isStaff, isManager }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, verifyMfa, logout, refreshUser, isStaff, isManager }}
+    >
       {children}
     </AuthContext.Provider>
   );

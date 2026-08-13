@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Accounts from "./pages/Accounts";
 import Analytics from "./pages/Analytics";
+import Security from "./pages/Security";
 
 export default function App() {
   const { user } = useAuth();
@@ -23,6 +24,7 @@ export default function App() {
         {/* Protected routes: ProtectedRoute redirects to /login if not signed in */}
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
+        <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
 
         {/* Analytics also requires a manager/admin ROLE */}
         <Route path="/analytics" element={
