@@ -1,5 +1,5 @@
 
-# SRTRS Bank — Full-Stack Banking Application
+# SRTRS Bank — Full-Stack Banking Application Divided in Versions
 
 A production-patterned **Bank Management System**: a secure REST API (FastAPI +
 PostgreSQL) with JWT authentication, role-based access control, and TOTP
