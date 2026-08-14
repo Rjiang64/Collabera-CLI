@@ -1,4 +1,5 @@
 """
+(MULTIFACTOR AUTHENTICATION CODE)
 One-off migration: add the multi-factor auth columns to the users table.
 
 Run from the project root:

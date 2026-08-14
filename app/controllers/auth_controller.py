@@ -55,6 +55,7 @@ def login(form: OAuth2PasswordRequestForm = Depends()):
 
         )
 
+    #(MULTIFACTOR AUTHENTICATION CODE)
     # SECOND FACTOR GATE.
     # The password was right, but if this account has MFA switched on that is
     # only step one. We deliberately do NOT mint an access token here -- handing

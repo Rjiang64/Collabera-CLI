@@ -1,4 +1,5 @@
 """
+(MULTIFACTOR AUTHENTICATION CODE)
 TOTP (Time-based One-Time Password) -- the second factor.
 
 HOW IT WORKS, in one paragraph:
