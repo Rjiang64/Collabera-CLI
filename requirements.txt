@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic[email]
+httpx
+psycopg[binary,pool]
+python-dotenv
+pyjwt
+bcrypt
+python-multipart
+pyotp
+qrcode

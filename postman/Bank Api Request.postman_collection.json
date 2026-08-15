@@ -1,0 +1,223 @@
+{
+  "info": {
+    "_postman_id": "c7ea7278-9000-4565-8345-bbab0bc2cdb4",
+    "name": "Bank Api Request",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57341363",
+    "_collection_link": "https://go.postman.co/collection/57341363-c7ea7278-9000-4565-8345-bbab0bc2cdb4?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1. Login as Manager",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"jwt_token\", jsonData.access_token);",
+              "pm.test(\"Manager login succeeded (200)\", function () {",
+              "    pm.response.to.have.status(200);",
+              "        pm.expect(jsonData.access_token).to.be.a(\"string\");",
+              "        });"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "username",
+              "value": "mgr@test.com",
+              "type": "text",
+              "uuid": "66d45b2a-b833-48f8-be07-203a8039dab5"
+            },
+            {
+              "key": "password",
+              "value": "pw123456",
+              "type": "text",
+              "uuid": "0bc1ec41-ebdf-4a50-8473-2cf0ddaa177b"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "auth", "login"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Analytics - Manager (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Manager can access branch-summary (200)\", function () { pm.response.to.have.status(200); })"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/analytics/branch-summary",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "analytics", "branch-summary"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Login as Customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json(); pm.collectionVariables.set(\"jwt_token\", jsonData.access_token); pm.test(\"Customer login succeeded (200)\", function () { pm.response.to.have.status(200); })"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "username",
+              "value": "cust@test.com",
+              "type": "text",
+              "uuid": "66d45b2a-b833-48f8-be07-203a8039dab5"
+            },
+            {
+              "key": "password",
+              "value": "pw123456",
+              "type": "text",
+              "uuid": "0bc1ec41-ebdf-4a50-8473-2cf0ddaa177b"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "auth", "login"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Analytics - Customer (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Customer is forbidden from branch-summary (403)\", function () { pm.response.to.have.status(403); })"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/analytics/branch-summary",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "analytics", "branch-summary"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Analytics - No Token (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Missing token is rejected (401)\", function () { pm.response.to.have.status(401); })"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/analytics/branch-summary",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "analytics", "branch-summary"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": ""
+    },
+    {
+      "key": "jwt_token",
+      "value": ""
+    }
+  ]
+}
